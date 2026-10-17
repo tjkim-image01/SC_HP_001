@@ -1,0 +1,61 @@
+{
+  "site": {
+    "name": "STUDIO.C",
+    "official": "스튜디오 처치 · STUDIO CHURCH",
+    "tagline_html": "질문이 생기면<br><em>먼저 찾아오는</em> 교회",
+    "sub": "매일 말씀과 질문을 만들고, 주일이면 한자리에 모입니다.",
+    "pastor": "조성민"
+  },
+  "church": {
+    "worship": "매주 주일 오전 10:30",
+    "place": "스튜디오교회 본당",
+    "address1": "경기도 김포한강1로 129",
+    "address2": "범양레우스라센트 지하 105호",
+    "phone": "010-3682-9411",
+    "email": "asram@naver.com",
+    "map": "https://map.kakao.com/?q=김포한강1로%20129"
+  },
+  "links": {
+    "youtube": "https://www.youtube.com/@STUDIO.C_1",
+    "youtube_shorts": "https://www.youtube.com/@STUDIO.C_1/shorts",
+    "cafe": "https://cafe.naver.com/studiochurch",
+    "instagram": "https://www.instagram.com/godpainter.cho/"
+  },
+  "prayer_topics": ["나라와 민족", "성령 충만", "미디어·AI 콘텐츠 사역", "스튜디오 아트미션 내년 사역", "교회 재정", "서울 이전"],
+  "serve_gifts": ["예배 기도", "성경 봉독", "봉헌", "찬양", "영상 · 디자인", "목소리"],
+  "paths": {
+    "studio_c": "C:/Users/USER/Downloads/app/painter'sroom/STUDIO_C",
+    "bct_questions": "03_시리즈/바이블캐스트톡_100/질문목록_v1.md",
+    "pureday_data": "C:/Users/USER/Downloads/app/webtoon2/project/p001/web/data.js",
+    "joshua_data": "C:/Users/USER/Downloads/app/webtoon2/project/s001/web/episodes_data.js",
+    "ffmpeg": "ffmpeg"
+  },
+  "gallery": {
+    "name": "갓페인터 뮤지움",
+    "en": "Godpainter's Museum",
+    "desc": "믿음에서 시작된 작품과 크리스천 아티스트가 만나는 열린 온라인 갤러리",
+    "url": "",
+    "exhibitions": [
+      {"title": "독수리전 · The Eagle", "year": "2018", "path": "exhibitions/eagle", "img": "assets/img/gallery/eagle.jpg", "work": "보혈의 날개 · 캔버스에 유화"},
+      {"title": "여호수아 · Be Strong and Courageous", "year": "2020", "path": "exhibitions/joshua", "img": "assets/img/gallery/joshua.jpg", "work": "무너지는 여리고 · 종이에 펜과 마카"}
+    ]
+  },
+  "webtoon": {
+    "pureday": {
+      "title": "퓨어데이",
+      "season_title": "시즌1 「퓨어데이의 시작」",
+      "en": "PUREDAY · Season 1: The Beginning",
+      "url": "https://godpainter1-god.github.io/gitpainter/",
+      "img_base": "https://godpainter1-god.github.io/gitpainter/",
+      "release": "매주 토요일 오전 10시",
+      "next_title": "비밀 열쇠"
+    },
+    "joshua": {
+      "title": "여호수아 · 약속의 땅",
+      "en": "JOSHUA · Into the Promised Land",
+      "url": "https://tjkim-image01.github.io/Joshua-story/",
+      "img_base": "https://tjkim-image01.github.io/Joshua-story/",
+      "blurb": "강하고 담대하라 — 요단을 건너 여리고까지, 약속을 믿은 사람들."
+    }
+  }
+}
