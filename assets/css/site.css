@@ -265,7 +265,8 @@ nav.main a.nav-gallery img{border-radius:5px}
 .ex-img img{width:100%;height:100%;object-fit:cover}
 .ex-t b{display:block;font:700 17px/1.4 var(--serif)}
 .ex-t small{display:block;color:var(--muted);font-size:13px;margin-top:4px}
-.tabbar{grid-template-columns:repeat(6,1fr)}
+.tabbar{grid-template-columns:repeat(7,1fr)} /* 2026-11-25 성경 칸 추가 */
+@media(min-width:1024px) and (max-width:1199px){nav.main{margin-left:4px;gap:2px}nav.main a{padding:8px 8px}}
 .tabbar a img{display:block}
 @media(prefers-reduced-motion:reduce){.museum-door img{transition:none}}
 

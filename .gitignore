@@ -1,3 +1,4 @@
 __pycache__/
 *.pyc
 build/auto_publish.log
+build/_bible_src/
