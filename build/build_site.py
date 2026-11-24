@@ -7,6 +7,7 @@
   - 주보: STUDIO_C/05_SNS/카페_주보/NN주_*.md  + 01_주보/<연도>/<월>/cover/cover_week_NN_v*.png
   - 업로드 일정: STUDIO_C/05_SNS/업로드일정.md  (트렌드 쇼츠 · 바이블캐스트톡 표 — 유튜브 ID·공개 시각)
   - 질문 목록: STUDIO_C/03_시리즈/바이블캐스트톡_100/질문목록_v1.md (첫 10문항)
+  - 쇼츠 갤러리: STUDIO_C/05_SNS/유튜브/YYYY-MM-DD_<시리즈>_<Q|N|D|W>NNN.md (바이블캐스트톡·넥스트제너레이션·크리스찬 데일리톡·글로벌 웨더)
   - 답변: content/qna/QNNN.json (홈페이지 쪽에서 관리)
   - 웹툰: webtoon2 p001/web/data.js (퓨어데이) · s001/web/episodes_data.js (여호수아) — 그림은 각 사이트 주소에서 불러온다
 
@@ -86,9 +87,18 @@ def yt_id(cell: str) -> str | None:
     return m.group(1) if m else None
 
 
-def parse_when(cell: str) -> dt.datetime | None:
-    m = re.search(r"(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})", cell)
-    return dt.datetime(*map(int, m.groups())) if m else None
+def parse_when(cell: str, default_hour: int | None = None) -> dt.datetime | None:
+    """칸에서 첫 '날짜 시각'을 읽는다. ~~지운 날짜~~ 는 건너뛴다. 시각이 없으면 default_hour 로."""
+    cell = re.sub(r"~~.*?~~", "", cell)
+    m = re.search(r"(\d{4})-(\d{2})-(\d{2})(?:\s+\(.\))?(?:\s+(\d{1,2}):(\d{2}))?", cell)
+    if not m:
+        return None
+    y, mo, d, h, mi = m.groups()
+    if h is None:
+        if default_hour is None:
+            return None
+        h, mi = default_hour, 0
+    return dt.datetime(int(y), int(mo), int(d), int(h), int(mi))
 
 
 def read_schedule(sc: Path) -> tuple[list[dict], list[dict]]:
@@ -109,13 +119,94 @@ def read_schedule(sc: Path) -> tuple[list[dict], list[dict]]:
         trend.append({"when": when, "id": vid, "chapter": cm.group(1) if cm else "", "chapter_title": cm.group(2) if cm else "",
                       "ep": cm.group(3) if cm else "", "title": cm.group(4) if cm else c[2], "mp4": sc / f if f.endswith(".mp4") else None})
     bct = []
-    for c in md_table(t, r"## 매주 금요일 20:00 · 바이블캐스트톡"):
+    for c in md_table(t, r"## [^\n]*바이블캐스트톡"):
         if len(c) < 5 or not c[0].isdigit():
             continue
         f = c[3].split(" ")[0]
-        bct.append({"no": int(c[0]), "when": parse_when(c[1] + " 20:00") if parse_when(c[1]) is None else parse_when(c[1]),
+        bct.append({"no": int(c[0]), "when": parse_when(c[1], 20),
                     "question": c[2], "id": yt_id(c[4]), "mp4": sc / f if f.endswith(".mp4") else None})
     return trend, bct
+
+
+def read_reserved_dates(sc: Path, rel: str) -> dict[int, dt.datetime]:
+    """질문_예약표.md 의 '공개 예정' 칸 → {번호: 공개 시각}. 시각이 없으면 20:00."""
+    p = sc / rel
+    if not p.exists():
+        return {}
+    out = {}
+    for r in p.read_text(encoding="utf-8").splitlines():
+        c = [x.strip() for x in r.strip().strip("|").split("|")] if r.startswith("|") else []
+        when = parse_when(c[1], 20) if len(c) > 1 and c[0].isdigit() else None
+        if when:
+            out[int(c[0])] = when
+    return out
+
+
+SHORTS_URL = re.compile(r"youtube\.com/shorts/([A-Za-z0-9_-]{11})")
+
+
+def _md_section(t: str, name: str) -> str:
+    m = re.search(rf"^## {re.escape(name)}\s*\n+(.+)", t, re.M)
+    return m.group(1).strip() if m else ""
+
+
+def _pick_mp4(sc: Path, video_line: str, uploaded: str | None, code: str) -> Path | None:
+    """영상: 줄의 폴더(또는 mp4)에서 장면을 뽑을 파일을 고른다 — 예약 줄에 적힌 업로드 파일 → 영상 줄의 mp4 → 가장 높은 vN."""
+    m = re.search(r"STUDIO_C/(\S+)", video_line)
+    if not m:
+        return None
+    p = sc / m.group(1).rstrip("/")
+    d = p.parent if p.suffix == ".mp4" else p
+    for c in ([d / uploaded] if uploaded else []) + ([p] if p.suffix == ".mp4" else []):
+        if c.exists():
+            return c
+    vers = [(int(x.group(1)), f) for f in d.glob(f"{code}_v*.mp4") if (x := re.fullmatch(rf"{code}_v(\d+)\.mp4", f.name))]
+    return max(vers)[1] if vers else None
+
+
+def read_shorts(sc: Path, scfg: dict, bct_sched: list[dict]) -> tuple[dict[str, list[dict]], list[str]]:
+    """05_SNS/유튜브/ 업로드 메타 md 에서 네 시리즈 회차를 모은다 → ({시리즈 key: [회차]}, [데이터 문제]).
+
+    - 유튜브 ID: '예약:' / '예약 완료:' 줄의 첫 shorts 주소만 쓴다 ('옛 예약' 줄은 지운 영상이라 무시).
+    - 공개 시각: 예약 줄에 '날짜 시각'이 있으면 그것(즉시 공개처럼 실제 시각), 없으면 첫 줄 '# 날짜 시각 공개'.
+    - 바이블캐스트톡은 md 에 주소가 없으면 업로드일정.md 표(read_schedule)에서 ID·시각을 찾는다.
+    """
+    meta = sc / scfg["meta_dir"]
+    by_no = {q["no"]: q for q in bct_sched}
+    out, issues = {}, []
+    for s in scfg["series"]:
+        eps: dict[int, dict] = {}
+        for f in sorted(meta.glob(f"*_{s['tag']}_{s['prefix']}[0-9][0-9][0-9].md")):
+            n = int(f.stem[-3:])
+            code = f"{s['prefix']}{n:03d}"
+            t = f.read_text(encoding="utf-8")
+            lines = t.splitlines()
+            head = lines[0] if lines else ""
+            res = next((ln for ln in lines if re.match(r"예약(?:\s*완료)?\s*:", ln)), "")
+            vm = SHORTS_URL.search(res)
+            vid = vm.group(1) if vm else None
+            when = parse_when(res) or parse_when(head) or parse_when(f.name, s["hour"])
+            if not vid and s["key"] == "bct" and by_no.get(n, {}).get("id"):
+                vid, when = by_no[n]["id"], by_no[n]["when"] or when
+                issues.append(f"{f.name}: 예약 줄에 유튜브 주소 없음 → 업로드일정.md 표의 {vid} 사용")
+            if not vid:
+                issues.append(f"{f.name}: 예약 줄에 유튜브 주소 없음 → 갤러리에서 뺌")
+                continue
+            if not when:
+                issues.append(f"{f.name}: 공개 시각을 못 읽음 → 갤러리에서 뺌")
+                continue
+            full = _md_section(t, "제목") or re.sub(r"^#\s*\S+\s+\S+\s+공개[^·]*·\s*", "", head)
+            up = re.search(rf"({code}_v\d+\.mp4)", res)
+            vline = next((ln for ln in lines if ln.startswith("영상:")), "")
+            hm = re.search(r"^진행:\s*([^(\n]+)", t, re.M)
+            if n in eps:
+                issues.append(f"{f.name}: {code} 가 두 번 있음 → 날짜가 늦은 파일을 씀")
+            eps[n] = {"series": s["key"], "no": n, "code": code, "id": vid, "when": when,
+                      "title": full.split(" | ")[0].strip(), "full_title": full,
+                      "host": hm.group(1).strip() if hm else "", "file": f.name,
+                      "mp4": _pick_mp4(sc, vline, up.group(1) if up else None, code)}
+        out[s["key"]] = list(eps.values())
+    return out, issues
 
 
 def read_first_questions(sc: Path, rel: str) -> list[dict]:
@@ -234,7 +325,7 @@ def sec_trend(items: list[dict], now: dt.datetime) -> str:
     return f'<div class="rail">{"".join(cards)}</div>'
 
 
-def sec_qna(bct: list[dict], firsts: list[dict], now: dt.datetime, cafe: str) -> str:
+def sec_qna(bct: list[dict], firsts: list[dict], now: dt.datetime, cafe: str, reserved: dict[int, dt.datetime]) -> str:
     if not bct:
         return ""
     pub = [q for q in bct if q["when"] and q["when"] <= now]
@@ -265,18 +356,96 @@ def sec_qna(bct: list[dict], firsts: list[dict], now: dt.datetime, cafe: str) ->
     else:
         parts.append('<div class="bubble a"><p class="big">답변을 준비하고 있어요.</p></div>')
     parts.append(f'<div class="a-actions"><a class="btn" href="{esc(cafe)}">카페에서 이야기 나누기</a></div>')
-    # 다음에 답할 질문: 일정표에 날짜가 있으면 그 날짜, 없으면 첫 회부터 매주 금요일로 계산
+    # 다음에 답할 질문: 업로드 일정표 → 질문 예약표 → 첫 회부터 매일 20:00 계산 순으로 날짜를 찾는다 (2026-10-18 매주 금요일 → 매일)
     sched = {q["no"]: q for q in bct}
-    base = bct[0]["when"] - dt.timedelta(days=7 * (bct[0]["no"] - 1))
+    base = bct[0]["when"] - dt.timedelta(days=bct[0]["no"] - 1)
     nxt = [q for q in firsts if q["no"] > cur["no"]][:3]
     if nxt:
         li = []
         for q in nxt:
-            when = sched.get(q["no"], {}).get("when") or base + dt.timedelta(days=7 * (q["no"] - 1))
+            when = sched.get(q["no"], {}).get("when") or reserved.get(q["no"]) or base + dt.timedelta(days=q["no"] - 1)
             li.append(f'<li>{esc(q["question"])} <span>Q.{q["no"]} · {md_date(when)}</span></li>')
         parts.append(f'<div class="pending"><h4>다음에 답할 질문</h4><ol>{"".join(li)}</ol></div>')
     parts.append("</article>")
     return "".join(parts)
+
+
+def shorts_thumbs(shorts: dict[str, list[dict]], now: dt.datetime, ff: str, sec: float) -> None:
+    """공개 전 회차는 mp4 장면(assets/img/shorts/<ID>.jpg)만 쓰고, 공개된 회차는 유튜브 썸네일(oar2) + 그 장면을 대체 그림으로.
+    장면은 한 번 뽑으면 다시 뽑지 않는다 (공개 직후 유튜브가 oar2 를 아직 안 만들었을 때도 회색 칸 대신 장면이 보이도록 공개 회차도 뽑아 둔다)."""
+    for eps in shorts.values():
+        for x in eps:
+            x["public"] = x["when"] <= now
+            local = next((f"assets/img/{d}/{x['id']}.jpg" for d in ("shorts", "yt") if (ROOT / "assets" / "img" / d / f"{x['id']}.jpg").exists()), None)
+            if not local and frame(x["mp4"], ROOT / "assets" / "img" / "shorts" / f"{x['id']}.jpg", sec, ff):
+                local = f"assets/img/shorts/{x['id']}.jpg"
+            x["local"] = local
+
+
+def sec_shorts(shorts: dict[str, list[dict]], scfg: dict, now: dt.datetime, yt_all: str) -> str:
+    """STUDIO.C 쇼츠 갤러리 — 시리즈 탭 4개, 공개된 회차 최신순 → 공개 예정 회차 빠른 순. 카드를 누르면 미리보기 창(site.js)."""
+    tabs, panels = [], []
+    for i, s in enumerate(x for x in scfg["series"] if shorts.get(x["key"])):
+        eps = shorts[s["key"]]
+        pub = sorted((e for e in eps if e["public"]), key=lambda e: (e["when"], e["no"]), reverse=True)
+        up = sorted((e for e in eps if not e["public"]), key=lambda e: (e["when"], e["no"]))
+        acc = "rgb({},{},{})".format(*s["accent"])
+        cards = []
+        for e in pub + up:
+            w = e["when"]
+            badge = s["badge"].format(n=e["no"])
+            when_txt = f"{md_date(w)} {w:%H:%M}"
+            if e["public"]:
+                img = yt_img(e["id"], e["local"] or f"https://i.ytimg.com/vi/{e['id']}/hqdefault.jpg", "")
+                state = '<span class="sg-state new">오늘 공개</span>' if w.date() == now.date() else ""
+                tag, attrs = "a", f'href="https://youtube.com/shorts/{esc(e["id"])}"'
+                when_full = f"{w.year}년 {w.month}월 {w.day}일({WEEKDAYS[w.weekday()]}) {w:%H:%M} 공개"
+                still = ""
+            else:
+                img = (f'<img src="{esc(e["local"])}" alt="" loading="lazy">' if e["local"]
+                       else f'<span class="sg-blank" aria-hidden="true">{esc(badge)}</span>')
+                state = f'<span class="sg-state soon">공개 예정 {w.month}/{w.day} {w:%H:%M}</span>'
+                tag, attrs = "button", 'type="button"'
+                when_full = f"{w.year}년 {w.month}월 {w.day}일({WEEKDAYS[w.weekday()]}) {w:%H:%M} 공개 예정"
+                still = e["local"] or ""
+            data = {"id": e["id"] if e["public"] else "", "title": e["title"], "when": when_full, "ep": badge,
+                    "img": still, "host": e["host"], "soon": "" if e["public"] else "1"}
+            da = " ".join(f'data-{k}="{esc(v)}"' for k, v in data.items())
+            play = '<span class="yt-play" aria-hidden="true"></span>' if e["public"] else ""
+            label = f'{badge} {e["title"]} · {"공개 예정 " if not e["public"] else ""}{when_txt}'
+            cards.append(f'<li><{tag} class="sg-card{"" if e["public"] else " soon"}" {attrs} {da} aria-label="{esc(label)}">'
+                         f'<span class="sg-thumb">{img}<span class="sg-ep">{esc(badge)}</span>{state}'
+                         f'{play}</span>'
+                         f'<span class="sg-date">{when_txt}{"" if e["public"] else " 공개 예정"}</span>'
+                         f'<span class="sg-title">{esc(e["title"])}</span></{tag}></li>')
+        k = esc(s["key"])
+        sel = "true" if i == 0 else "false"
+        ti = "" if i == 0 else ' tabindex="-1"'
+        count = f'공개 {len(pub)}편' + (f' · 공개 예정 {len(up)}편' if up else "")
+        tabs.append(f'<button type="button" role="tab" class="sg-tab" id="sg-tab-{k}" aria-controls="sg-p-{k}" aria-selected="{sel}"'
+                    f'{ti} style="--acc:{acc}">{esc(s["label"])}<small>{len(eps)}</small></button>')
+        panels.append(f'<div class="sg-panel{" sg-news" if s.get("news") else ""}" role="tabpanel" id="sg-p-{k}" aria-labelledby="sg-tab-{k}" '
+                      f'data-series="{esc(s["label"])}" style="--acc:{acc}"{"" if i == 0 else " hidden"}>'
+                      f'<div class="sg-phead"><p><b>{esc(s["label"])}</b> {esc(s["desc"])}<span class="sg-count">{count}</span></p>'
+                      f'<span class="sg-scroll"><button type="button" class="sg-sb" data-dir="-1" aria-label="앞으로 넘기기">‹</button>'
+                      f'<button type="button" class="sg-sb" data-dir="1" aria-label="뒤로 넘기기">›</button></span></div>'
+                      f'<ol class="sg-rail">{"".join(cards)}</ol></div>')
+    if not tabs:
+        return ""
+    return f'''<section class="dark sgal" id="shorts" aria-labelledby="h-shorts">
+    <div class="wrap">
+      <div class="head">
+        <div>
+          <p class="eyebrow">쇼츠 갤러리 · 날마다 새 영상</p>
+          <h2 id="h-shorts">STUDIO.C 쇼츠 갤러리</h2>
+          <p class="lead">공개된 영상은 최신순, 그 뒤에 공개 예정 영상이 이어집니다. 카드를 누르면 바로 볼 수 있어요. <span class="sg-asof">{md_date(now)} {now:%H:%M} 기준</span></p>
+        </div>
+        <a class="more" href="{esc(yt_all)}">유튜브에서 모두 보기 ›</a>
+      </div>
+      <div class="sg-tabs" role="tablist" aria-label="쇼츠 시리즈">{"".join(tabs)}</div>
+      {"".join(panels)}
+    </div>
+  </section>'''
 
 
 def next_release(now: dt.datetime, weekday: int, hour: int) -> dt.datetime:
@@ -383,14 +552,29 @@ def main() -> None:
     print(f"  트렌드 쇼츠 {len(trend)}편 · 바이블캐스트톡 {len(bct)}편")
     firsts = read_first_questions(sc, cfg["paths"]["bct_questions"])
 
+    shorts, issues = read_shorts(sc, cfg["shorts"], bct)
+    shorts_thumbs(shorts, now, ff, cfg["shorts"].get("frame_sec", 3))
+    for s in cfg["shorts"]["series"]:
+        eps = shorts.get(s["key"], [])
+        pub = sorted(e["code"] for e in eps if e["public"])
+        up = sorted(e["code"] for e in eps if not e["public"])
+        rng = lambda xs: f"{xs[0]}~{xs[-1]}" if len(xs) > 1 else (xs[0] if xs else "-")
+        print(f"  쇼츠 갤러리 · {s['label']}: {len(eps)}편 (공개 {len(pub)} {rng(pub)} · 공개 예정 {len(up)} {rng(up)})")
+        miss = [e["code"] for e in eps if not e["public"] and not e["local"]]
+        if miss:
+            print(f"  ! 공개 예정인데 미리보기 장면이 없음: {', '.join(miss)}", file=sys.stderr)
+    for msg in issues:
+        print(f"  ! {msg}", file=sys.stderr)
+
     c, ch, lk = cfg["site"], cfg["church"], cfg["links"]
     rep = {
         "BUILD_INFO": f"빌드 {now:%Y-%m-%d %H:%M}",
         "TAGLINE": c["tagline_html"], "SUB": esc(c["sub"]), "OFFICIAL": esc(c["official"]), "PASTOR": esc(c["pastor"]),
         "STRIP": sec_strip(b),
         "SUNDAY": sec_sunday(b, cover_rel, cafe_link_for_week(sc, b["week"]) if b else None),
-        "QNA_THREAD": sec_qna(bct, firsts, now, lk["cafe"]),
+        "QNA_THREAD": sec_qna(bct, firsts, now, lk["cafe"], read_reserved_dates(sc, cfg["paths"]["bct_reserved"])),
         "TREND_RAIL": sec_trend(trend, now),
+        "SHORTS_GALLERY": sec_shorts(shorts, cfg["shorts"], now, lk["youtube_shorts"]),
         "WORD": sec_word(b, c["pastor"]),
         "TOONS": sec_toons(cfg, now),
         "GALLERY": sec_gallery(cfg["gallery"]),

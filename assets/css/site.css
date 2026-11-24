@@ -268,3 +268,86 @@ nav.main a.nav-gallery img{border-radius:5px}
 .tabbar{grid-template-columns:repeat(6,1fr)}
 .tabbar a img{display:block}
 @media(prefers-reduced-motion:reduce){.museum-door img{transition:none}}
+
+/* 쇼츠 갤러리 (2026-11-24) — 바이블캐스트톡 노랑 · 넥스트제너레이션 민트 · 크리스찬 데일리톡/글로벌 웨더 하늘색(뉴스룸 남색 판).
+   카드는 '이번 주 답변'의 세로 썸네일·빨간 재생 단추 말씨를 그대로 쓴다. 시리즈 색은 --acc (build_site.py 가 config.json accent 로 넣음) */
+.sg-asof{display:inline-block;margin-left:4px;font-size:13px;color:var(--muted);opacity:.85}
+.sg-tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;margin:0 -2px;scrollbar-width:none}
+.sg-tabs::-webkit-scrollbar{display:none}
+.sg-tab{flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font:600 15px/1 var(--sans);cursor:pointer;white-space:nowrap}
+.sg-tab:hover{color:var(--ink);border-color:var(--acc)}
+.sg-tab small{font:700 12px/1 var(--sans);padding:4px 7px;border-radius:999px;background:var(--surface-2);color:inherit}
+.sg-tab[aria-selected="true"]{background:var(--acc);border-color:var(--acc);color:#16181D}
+.sg-tab[aria-selected="true"] small{background:rgba(22,24,29,.16)}
+.sg-panel{margin-top:18px}
+.sg-panel[hidden]{display:none}
+.sg-news{--ink:#EAF2FF;--muted:#A9BBD3;--line:#24395A;--surface-2:#13243C;color:var(--ink);background:linear-gradient(180deg,#0F1D33,#0B1526);border:1px solid #24395A;border-radius:18px;padding:16px 16px 6px}
+@media(min-width:768px){.sg-news{padding:20px 20px 8px}}
+.sg-phead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.sg-phead p{margin:0;font-size:15px;line-height:1.6;color:var(--muted)}
+.sg-phead b{color:var(--ink);margin-right:6px}
+.sg-count{display:inline-block;margin-left:8px;font:600 12px/1 var(--sans);padding:5px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);vertical-align:1px}
+.sg-scroll{display:none;gap:6px;flex:0 0 auto}
+@media(min-width:900px){.sg-scroll{display:flex}}
+.sg-sb{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);font:600 20px/1 var(--sans);cursor:pointer}
+.sg-sb:hover{border-color:var(--acc);color:var(--acc)}
+.sg-rail{list-style:none;margin:0;padding:4px 2px 14px;display:grid;grid-auto-flow:column;grid-auto-columns:148px;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+@media(min-width:768px){.sg-rail{grid-auto-columns:172px;gap:16px}}
+.sg-rail li{scroll-snap-align:start;min-width:0}
+.sg-card{display:block;width:100%;padding:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.sg-thumb{position:relative;display:block;aspect-ratio:9/16;border-radius:14px;overflow:hidden;background:#0E0F12;border:1px solid var(--line);transition:transform .18s,border-color .18s}
+.sg-card:hover .sg-thumb,.sg-card:focus-visible .sg-thumb{transform:translateY(-3px);border-color:var(--acc)}
+.sg-thumb img{width:100%;height:100%;object-fit:cover}
+.sg-thumb::after{content:"";position:absolute;inset:0;background:linear-gradient(transparent 55%,rgba(0,0,0,.62));pointer-events:none}
+.sg-ep{display:inline-block;font:800 12px/1 var(--sans);padding:6px 8px;border-radius:6px;background:var(--acc);color:#16181D}
+.sg-thumb .sg-ep{position:absolute;left:8px;top:8px;z-index:1}
+.sg-state{position:absolute;left:8px;bottom:8px;z-index:1;max-width:calc(100% - 16px);font:700 11px/1.2 var(--sans);padding:6px 8px;border-radius:6px}
+.sg-state.soon{background:rgba(18,20,24,.82);color:#F5F2EB;border:1px solid rgba(255,255,255,.22)}
+.sg-state.new{background:#fff;color:#16181D}
+.sg-thumb .yt-play{width:40px;height:40px;margin:-20px 0 0 -20px}
+.sg-thumb .yt-play::before{left:16px;top:12px;border-left-width:12px;border-top-width:8px;border-bottom-width:8px}
+.sg-card.soon .sg-thumb img{filter:saturate(.7) brightness(.78)}
+.sg-blank{display:grid;place-items:center;height:100%;font:800 22px/1 var(--sans);color:var(--acc);background:radial-gradient(80% 60% at 50% 40%,color-mix(in srgb,var(--acc) 22%,transparent),transparent 70%)}
+.sg-date{display:block;margin-top:9px;font:600 12px/1.3 var(--sans);color:var(--muted)}
+.sg-card.soon .sg-date{color:var(--acc)}
+.sg-title{display:block;margin-top:3px;font:600 15px/1.45 var(--sans);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+:root[data-theme="light"] .sg-card.soon .sg-date{color:var(--ink)}
+:root[data-theme="light"] .sg-news .sg-card.soon .sg-date{color:var(--acc)}
+
+/* 미리보기 창 (dialog) */
+html.sg-lock{overflow:hidden}
+.sg-modal{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:transparent;color:#F5F2EB;overflow:hidden}
+.sg-modal::backdrop{background:rgba(6,7,10,.9)}
+.sg-wrap{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:12px}
+.sg-box{position:relative;display:grid;gap:14px;width:min(100%,880px);max-height:100%;overflow:auto;background:#16181D;border:1px solid #343843;border-radius:18px;padding:14px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.sg-stage{position:relative;width:min(100%,calc(60dvh * 9 / 16));aspect-ratio:9/16;margin:0 auto;border-radius:12px;overflow:hidden;background:#000}
+.sg-stage iframe,.sg-stage img{display:block;width:100%;height:100%;border:0;object-fit:cover}
+.sg-stage .sg-soon{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);white-space:nowrap;font:700 14px/1 var(--sans);padding:10px 14px;border-radius:999px;background:rgba(18,20,24,.85);border:1px solid rgba(255,255,255,.25);color:#fff}
+.sg-stage .sg-blank{font-size:34px}
+.sg-info{min-width:0}
+.sg-meta{margin:0 0 8px;font-size:14px;color:#BDB7AC}
+.sg-meta .sg-ep{margin-right:6px}
+.sg-info h3{font:700 21px/1.4 var(--serif);margin:0 0 6px}
+.sg-when{margin:0;font-size:15px;color:#F5F2EB}
+.sg-modal.is-soon .sg-when{color:var(--acc)}
+.sg-host{margin:2px 0 14px;font-size:13px;color:#BDB7AC}
+.sg-info .btn{color:#F5F2EB;border-color:#343843}
+.sg-info .btn[hidden]{display:none}
+.sg-bar{display:flex;align-items:center;gap:12px;margin-top:16px}
+.sg-nav{width:48px;height:48px;border-radius:50%;border:1px solid #343843;background:#20232A;color:#F5F2EB;font:600 24px/1 var(--sans);cursor:pointer}
+.sg-nav:hover:not(:disabled){border-color:var(--acc);color:var(--acc)}
+.sg-nav:disabled{opacity:.35;cursor:default}
+.sg-pos{font-size:14px;color:#BDB7AC;min-width:64px;text-align:center}
+.sg-x{position:absolute;right:10px;top:10px;z-index:2;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(18,20,24,.78);color:#fff;font:400 28px/1 var(--sans);cursor:pointer}
+@media(min-width:760px){
+  .sg-wrap{padding:24px}
+  .sg-box{grid-template-columns:auto 1fr;align-items:center;gap:28px;padding:22px 26px 22px 22px}
+  .sg-stage{width:calc(min(80dvh,720px) * 9 / 16);margin:0}
+  .sg-info h3{font-size:24px}
+}
+@media(min-width:1180px){
+  .sg-nav{position:fixed;top:50%;margin-top:-30px;width:60px;height:60px;font-size:30px;background:rgba(32,35,42,.85)}
+  .sg-nav.prev{left:28px}.sg-nav.next{right:28px}
+  .sg-bar{margin-top:10px}.sg-pos{text-align:left;min-width:0}
+}
+@media(prefers-reduced-motion:reduce){.sg-thumb{transition:none}.sg-card:hover .sg-thumb{transform:none}}

@@ -26,6 +26,7 @@
   "paths": {
     "studio_c": "C:/Users/USER/Downloads/app/painter'sroom/STUDIO_C",
     "bct_questions": "03_시리즈/바이블캐스트톡_100/질문목록_v1.md",
+    "bct_reserved": "03_시리즈/바이블캐스트톡_100/질문_예약표.md",
     "pureday_data": "C:/Users/USER/Downloads/app/webtoon2/project/p001/web/data.js",
     "joshua_data": "C:/Users/USER/Downloads/app/webtoon2/project/s001/web/episodes_data.js",
     "ffmpeg": "ffmpeg"
@@ -38,6 +39,21 @@
     "exhibitions": [
       {"title": "독수리전 · The Eagle", "year": "2018", "path": "exhibitions/eagle", "img": "assets/img/gallery/eagle.jpg", "work": "보혈의 날개 · 캔버스에 유화"},
       {"title": "여호수아 · Be Strong and Courageous", "year": "2020", "path": "exhibitions/joshua", "img": "assets/img/gallery/joshua.jpg", "work": "무너지는 여리고 · 종이에 펜과 마카"}
+    ]
+  },
+  "shorts": {
+    "_note": "쇼츠 갤러리 — STUDIO_C/05_SNS/유튜브/YYYY-MM-DD_<tag>_<prefix>NNN.md 를 읽는다 (예약: 줄의 유튜브 주소만, 옛 예약 줄은 무시). 영상 폴더는 03_시리즈/<base>/",
+    "meta_dir": "05_SNS/유튜브",
+    "frame_sec": 3,
+    "series": [
+      {"key": "bct", "label": "바이블캐스트톡", "tag": "바이블캐스트톡", "prefix": "Q", "hour": 20, "badge": "Q.{n}/100",
+       "accent": [244, 196, 48], "desc": "기독교인이 궁금한 100가지 · 매일 저녁 8시"},
+      {"key": "nextgen", "label": "넥스트제너레이션 캐스트톡", "tag": "넥스트제너레이션캐스트톡", "prefix": "N", "hour": 22, "badge": "#{n}",
+       "accent": [94, 234, 212], "desc": "청소년판 「물어봐도 돼?」 · 월·수·금 밤 10시"},
+      {"key": "cdk", "label": "크리스찬 데일리톡", "tag": "크리스찬데일리톡", "prefix": "D", "hour": 21, "badge": "D{n:03d}",
+       "accent": [96, 178, 255], "news": true, "desc": "크리스천이 함께 알아야 할 오늘의 소식 · 매일 밤 9시"},
+      {"key": "weather", "label": "글로벌 웨더", "tag": "글로벌웨더", "prefix": "W", "hour": 7, "badge": "W{n:03d}",
+       "accent": [96, 178, 255], "news": true, "desc": "CDK 글로벌 웨더 · 오늘의 세계 날씨 · 매일 아침 7시"}
     ]
   },
   "webtoon": {
