@@ -351,7 +351,7 @@ def sec_trend(items: list[dict], now: dt.datetime) -> str:
     return f'<div class="rail">{"".join(cards)}</div>'
 
 
-def sec_qna(bct: list[dict], firsts: list[dict], now: dt.datetime, cafe: str, reserved: dict[int, dt.datetime]) -> str:
+def sec_qna(bct: list[dict], firsts: list[dict], now: dt.datetime, cafe: str, reserved: dict[int, dt.datetime], qpages: dict[int, str] | None = None) -> str:
     if not bct:
         return ""
     pub = [q for q in bct if q["when"] and q["when"] <= now]
@@ -382,7 +382,11 @@ def sec_qna(bct: list[dict], firsts: list[dict], now: dt.datetime, cafe: str, re
                      f'<div class="todo"><b>오늘 할 일</b> · {esc(a["today"])}</div></div>')
     else:
         parts.append('<div class="bubble a"><p class="big">답변을 준비하고 있어요.</p></div>')
-    parts.append(f'<div class="a-actions"><a class="btn" href="{esc(cafe)}">카페에서 이야기 나누기</a></div>')
+    # 2026-11-25 대표님: Q51 부터 '전체 답은 스튜디오 교회 홈페이지에 있어요' → 전체 답 페이지(qna/, build_qna.py)로 잇는다
+    qpages = qpages or {}
+    full = f'<a class="btn primary" href="{esc(qpages[cur["no"]])}">전체 답 읽기</a>' if cur["no"] in qpages else ""
+    allq = '<a class="btn" href="qna/">100가지 질문 전체 답</a>' if qpages else ""
+    parts.append(f'<div class="a-actions">{full}{allq}<a class="btn" href="{esc(cafe)}">카페에서 이야기 나누기</a></div>')
     # 다음에 답할 질문: 업로드 일정표 → 질문 예약표 → 첫 회부터 매일 20:00 계산 순으로 날짜를 찾는다 (2026-10-18 매주 금요일 → 매일)
     sched = {q["no"]: q for q in bct}
     base = bct[0]["when"] - dt.timedelta(days=bct[0]["no"] - 1)
@@ -593,13 +597,16 @@ def main() -> None:
     for msg in issues:
         print(f"  ! {msg}", file=sys.stderr)
 
+    import build_qna   # 2026-11-25 바이블캐스트톡 전체 답 페이지 (qna/)
+    qpages = build_qna.build(ROOT, sc, shorts.get("bct", []), now, cfg["links"]["cafe"])
+
     c, ch, lk = cfg["site"], cfg["church"], cfg["links"]
     rep = {
         "BUILD_INFO": f"빌드 {now:%Y-%m-%d %H:%M}",
         "TAGLINE": c["tagline_html"], "SUB": esc(c["sub"]), "OFFICIAL": esc(c["official"]), "PASTOR": esc(c["pastor"]),
         "STRIP": sec_strip(b),
         "SUNDAY": sec_sunday(b, cover_rel, cafe_link_for_week(sc, b["week"]) if b else None),
-        "QNA_THREAD": sec_qna(bct_from_shorts(sc, cfg["shorts"], shorts) or bct, firsts, now, lk["cafe"], read_reserved_dates(sc, cfg["paths"]["bct_reserved"])),
+        "QNA_THREAD": sec_qna(bct_from_shorts(sc, cfg["shorts"], shorts) or bct, firsts, now, lk["cafe"], read_reserved_dates(sc, cfg["paths"]["bct_reserved"]), qpages),
         "TREND_RAIL": sec_trend(trend, now),
         "SHORTS_GALLERY": sec_shorts(shorts, cfg["shorts"], now, lk["youtube_shorts"]),
         "WORD": sec_word(b, c["pastor"]),
