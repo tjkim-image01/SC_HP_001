@@ -2,12 +2,14 @@
 # Windows 작업 스케줄러 「STUDIO.C 홈페이지 자동 갱신」이 하루 4번(07:05 · 20:05 · 21:05 · 22:05) 실행 —
 # 글로벌 웨더 07:00, 바이블캐스트톡 20:00, 크리스찬 데일리톡 21:00, 넥스트제너레이션 22:00 공개 직후.
 # 하는 일: build_site.py 로 index.html 다시 만들기 → 바뀐 것이 있으면 commit → push (GitHub Pages 가 1분 안팎에 반영)
-# 기록: build/auto_publish.log (최근 500줄만 남김)
+# 기록: build/auto_publish.log (최근 500줄만 남김, 저장소에는 올리지 않음 — .gitignore)
 $ErrorActionPreference = "Continue"
 $Root = "C:\Users\USER\Downloads\app\SC_HP_001"
 $Py = "C:\Users\USER\Downloads\app\youtubeauto\.local\venv\Scripts\python.exe"
 $Log = Join-Path $Root "build\auto_publish.log"
 $env:PYTHONUTF8 = "1"
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
 $env:GIT_TERMINAL_PROMPT = "0"
 Set-Location $Root
 function Write-Log($m) { "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')  $m" | Out-File -FilePath $Log -Append -Encoding utf8 }
