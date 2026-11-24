@@ -209,6 +209,32 @@ def read_shorts(sc: Path, scfg: dict, bct_sched: list[dict]) -> tuple[dict[str, 
     return out, issues
 
 
+def bct_from_shorts(sc: Path, scfg: dict, shorts: dict[str, list[dict]]) -> list[dict]:
+    """'이번 주 답변'용 바이블캐스트톡 회차 — 갤러리와 같은 업로드 메타 md 에서 (2026-11-24 대표님 Q36 화면: 업로드일정.md 표에는 지운 여름판 ID 가 남아
+    썸네일이 회색으로 나옴). 질문 = 첫 줄 'Q.N/100 …', 그림 = 우리 mp4 장면(유튜브 썸네일은 공개 직후·지운 영상에서 회색 대체 그림이 옴),
+    답 = content/qna/QNNN.json 이 없으면 설명란의 '짧은 답 · 오늘의 말씀 · 오늘 할 일'로 자동."""
+    meta = sc / scfg["meta_dir"]
+    out = []
+    for e in sorted(shorts.get("bct", []), key=lambda x: x["no"]):
+        f = next(iter(meta.glob(f"*{e['file']}")), None) if e.get("file") else None
+        t = f.read_text(encoding="utf-8") if f else ""
+        head = t.splitlines()[0] if t else ""
+        qm = re.search(r"Q\.\d+/100\s+(.+)$", head)
+        desc = t.split("## 설명", 1)[1].split("\n## ", 1)[0] if "## 설명" in t else ""
+        short = re.search(r"^짧은 답:\s*(.+)$", desc, re.M)
+        vref = re.search(r"^오늘의 말씀:\s*(.+?)\s*$", desc, re.M)
+        vtxt = re.search(r"^오늘의 말씀:.*\n\s*[\"“](.+?)[\"”]\s*$", desc, re.M)
+        todo = re.search(r"^오늘 할 일:\s*(.+)$", desc, re.M)
+        auto = None
+        if short:
+            auto = {"asked": qm.group(1).strip() if qm else e["title"], "category": "", "host": "조아름", "answer_by": "조성민 담임목사",
+                    "conclusion": short.group(1).strip(), "body": "", "verse": vtxt.group(1).strip() if vtxt else "",
+                    "verse_ref": vref.group(1).strip() if vref else "", "today": todo.group(1).strip() if todo else ""}
+        out.append({"no": e["no"], "when": e["when"], "id": e["id"], "question": qm.group(1).strip() if qm else e["title"],
+                    "fallback": e.get("local"), "local": e.get("local"), "auto": auto})
+    return out
+
+
 def read_first_questions(sc: Path, rel: str) -> list[dict]:
     t = (sc / rel).read_text(encoding="utf-8")
     out = []
@@ -333,12 +359,13 @@ def sec_qna(bct: list[dict], firsts: list[dict], now: dt.datetime, cafe: str, re
     released = cur["when"] <= now
     ans_f = ROOT / "content" / "qna" / f"Q{cur['no']:03d}.json"
     a = json.loads(ans_f.read_text(encoding="utf-8")) if ans_f.exists() else None
+    a = a or cur.get("auto")
     tag = "" if released else f'<span class="tag">{md_date(cur["when"])} {cur["when"]:%H:%M} 공개</span>'
     href = f'https://youtube.com/shorts/{cur["id"]}' if cur["id"] else cafe
     thumb = ""
     if cur["id"]:
         thumb = (f'<a class="yt-big" href="{href}" aria-label="유튜브 쇼츠로 보기: {esc(cur["question"])}">'
-                 f'{yt_img(cur["id"], cur.get("fallback"), "바이블캐스트톡 진행자 조아름")}'
+                 f'{(f"<img src=\"{esc(cur['local'])}\" alt=\"바이블캐스트톡 진행자 조아름\">" if cur.get("local") else yt_img(cur["id"], cur.get("fallback"), "바이블캐스트톡 진행자 조아름"))}'
                  f'<span class="yt-play" aria-hidden="true"></span>'
                  f'<span class="yt-label">영상으로 보기{(" · " + esc(a["duration"])) if a and a.get("duration") else ""}</span></a>')
     asked = a["asked"] if a else cur["question"]
@@ -350,8 +377,8 @@ def sec_qna(bct: list[dict], firsts: list[dict], now: dt.datetime, cafe: str, re
              f'<p class="host">진행 <b>{host}</b> · 바이블캐스트톡<br>쇼츠로 먼저 들어 보세요</p></div></div>']
     if a:
         parts.append(f'<div class="who"><img src="assets/img/logo_white.png" alt=""><b>STUDIO.C</b> · {esc(a["answer_by"])} 답변</div>'
-                     f'<div class="bubble a"><p class="big">{esc(a["conclusion"])}</p><p>{esc(a["body"])}</p>'
-                     f'<blockquote class="verse">{esc(a["verse"])}<cite>{esc(a["verse_ref"])}</cite></blockquote>'
+                     f'<div class="bubble a"><p class="big">{esc(a["conclusion"])}</p>' + (f'<p>{esc(a["body"])}</p>' if a.get("body") else "") +
+                     (f'<blockquote class="verse">{esc(a["verse"])}<cite>{esc(a["verse_ref"])}</cite></blockquote>' if a.get("verse") else "") +
                      f'<div class="todo"><b>오늘 할 일</b> · {esc(a["today"])}</div></div>')
     else:
         parts.append('<div class="bubble a"><p class="big">답변을 준비하고 있어요.</p></div>')
@@ -572,7 +599,7 @@ def main() -> None:
         "TAGLINE": c["tagline_html"], "SUB": esc(c["sub"]), "OFFICIAL": esc(c["official"]), "PASTOR": esc(c["pastor"]),
         "STRIP": sec_strip(b),
         "SUNDAY": sec_sunday(b, cover_rel, cafe_link_for_week(sc, b["week"]) if b else None),
-        "QNA_THREAD": sec_qna(bct, firsts, now, lk["cafe"], read_reserved_dates(sc, cfg["paths"]["bct_reserved"])),
+        "QNA_THREAD": sec_qna(bct_from_shorts(sc, cfg["shorts"], shorts) or bct, firsts, now, lk["cafe"], read_reserved_dates(sc, cfg["paths"]["bct_reserved"])),
         "TREND_RAIL": sec_trend(trend, now),
         "SHORTS_GALLERY": sec_shorts(shorts, cfg["shorts"], now, lk["youtube_shorts"]),
         "WORD": sec_word(b, c["pastor"]),

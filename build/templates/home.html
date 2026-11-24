@@ -26,10 +26,9 @@
     </a>
     <nav class="main" aria-label="주 메뉴">
       <a href="./" aria-current="page">오늘</a>
-      <a href="#word">말씀</a>
-      <a href="#ask">질문 100</a>
-      <a href="#trend">시리즈</a>
       <a href="#shorts">쇼츠</a>
+      <a href="#ask">질문 100</a>
+      <a href="#word">말씀</a>
       <a href="#toon">웹툰</a>
       <a href="#gallery" class="nav-gallery"><img src="assets/img/gallery/museum_icon.svg" alt="" width="18" height="18">갤러리</a>
       <a href="#pray">소식</a>
@@ -63,13 +62,15 @@
     </div>
   </section>
 
+  {{SHORTS_GALLERY}}
+
   <section class="paper" id="ask" aria-labelledby="h-ask">
     <div class="wrap">
       <p class="eyebrow">질문 100 · 바이블캐스트톡</p>
       <div class="qa">
         <div>
           <h2 class="qa-title" id="h-ask">궁금한 게 있나요?<br><mark>질문하면 답해 드려요</mark></h2>
-          <p class="lead" style="margin-bottom:22px">성도도, 아직 교회가 낯선 분도 괜찮아요. 남겨 주신 질문은 목사님이 읽고, 매주 금요일 바이블캐스트톡과 이 창에서 답해 드립니다.</p>
+          <p class="lead" style="margin-bottom:22px">성도도, 아직 교회가 낯선 분도 괜찮아요. 남겨 주신 질문은 목사님이 읽고, 매일 저녁 8시 바이블캐스트톡과 이 창에서 답해 드립니다.</p>
           <form class="ask-box" id="askForm">
             <label for="askq">무엇이 궁금하세요?</label>
             <textarea id="askq" placeholder="예) 기도를 해도 마음이 평안하지 않아요. 제가 뭘 잘못하고 있는 걸까요?"></textarea>
@@ -91,7 +92,7 @@
             <div class="flow-steps" aria-label="답변 과정">
               <div><b>① 질문 남기기</b>익명으로 보내요</div>
               <div><b>② 목사님이 확인</b>성경으로 답을 준비</div>
-              <div><b>③ 답변 공개</b>금요일 저녁 8시</div>
+              <div><b>③ 답변 공개</b>매일 저녁 8시</div>
             </div>
           </form>
         </div>
@@ -100,21 +101,7 @@
     </div>
   </section>
 
-  <section class="dark" id="trend" aria-labelledby="h-trend">
-    <div class="wrap">
-      <div class="head">
-        <div>
-          <p class="eyebrow">오늘의 한 편 · 매일 오전 7시</p>
-          <h2 id="h-trend">한국 교회 트렌드 2027</h2>
-          <p class="lead">유튜브에 올라간 쇼츠를 그대로 모았습니다.</p>
-        </div>
-        <a class="more" href="{{YOUTUBE_SHORTS}}">유튜브에서 모두 보기 ›</a>
-      </div>
-      {{TREND_RAIL}}
-    </div>
-  </section>
 
-  {{SHORTS_GALLERY}}
 
   {{WORD}}
 
