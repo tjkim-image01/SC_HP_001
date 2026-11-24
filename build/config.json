@@ -49,12 +49,9 @@
       {"key": "bct", "label": "바이블캐스트톡", "tag": "바이블캐스트톡", "prefix": "Q", "hour": 20, "badge": "Q.{n}/100",
        "accent": [244, 196, 48], "desc": "기독교인이 궁금한 100가지 · 매일 저녁 8시"},
       {"key": "nextgen", "label": "넥스트제너레이션 캐스트톡", "tag": "넥스트제너레이션캐스트톡", "prefix": "N", "hour": 22, "badge": "#{n}",
-       "accent": [94, 234, 212], "desc": "청소년판 「물어봐도 돼?」 · 월·수·금 밤 10시"},
-      {"key": "cdk", "label": "크리스찬 데일리톡", "tag": "크리스찬데일리톡", "prefix": "D", "hour": 21, "badge": "D{n:03d}",
-       "accent": [96, 178, 255], "news": true, "desc": "크리스천이 함께 알아야 할 오늘의 소식 · 매일 밤 9시"},
-      {"key": "weather", "label": "글로벌 웨더", "tag": "글로벌웨더", "prefix": "W", "hour": 7, "badge": "W{n:03d}",
-       "accent": [96, 178, 255], "news": true, "desc": "CDK 글로벌 웨더 · 오늘의 세계 날씨 · 매일 아침 7시"}
-    ]
+       "accent": [94, 234, 212], "desc": "청소년판 「물어봐도 돼?」 · 월·수·금 밤 10시"}
+    ],
+    "_removed_2026-11-25": "크리스찬 데일리톡(cdk, D, 21시)·글로벌 웨더(weather, W, 7시) — 대표님 '조회수가 안 나올 것 같다' 로 채널에서 내림(영상 D001·D002·W001·재생목록 영구 삭제). 되살릴 때 이 두 줄 형식으로 series 에 다시 넣음: {key:cdk,label:크리스찬 데일리톡,tag:크리스찬데일리톡,prefix:D,hour:21,badge:D{n:03d},accent:[96,178,255],news:true} / {key:weather,label:글로벌 웨더,tag:글로벌웨더,prefix:W,hour:7,badge:W{n:03d},accent:[96,178,255],news:true}"
   },
   "webtoon": {
     "pureday": {
